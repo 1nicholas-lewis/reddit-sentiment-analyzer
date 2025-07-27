@@ -55,7 +55,7 @@ reddit-sentiment-analyzer/
 
 - [`dashboard.html`](dashboard.html) – Live interactive dashboard
 - [`lambda_function.py`](lambda/reddit_ingest/lambda_function.py) – Reddit ingestion and sentiment classification
-- [`lambda_function.py`](lambda/reddit_summary/lambda_function.py) – Sentiment summary endpoint
+- [`lambda_summary_function.py`](lambda/reddit_summary/lambda_function.py) – Sentiment summary endpoint
 - [`chart-setup.js`](assets/chart-setup.js) – Chart config for frontend
 
 ---
