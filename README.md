@@ -23,21 +23,21 @@ This serverless project uses AWS services to extract and analyze Reddit sentimen
 - Reddit API via `praw`
 
 ## 📁 Folder Structure
-
+```
 reddit-sentiment-analyzer/
-├── dashboard.html # Live data dashboard
+├── dashboard.html                # Live data dashboard
 ├── assets/
-│ └── chart-setup.js # Chart rendering logic
+│   └── chart-setup.js           # Chart rendering logic
 ├── lambda/
-│ ├── reddit_ingest/
-│ │ └── lambda_function.py # Ingests Reddit posts + Comprehend
-│ └── reddit_summary/
-│ └── lambda_function.py # Summarizes daily sentiment counts
+│   ├── reddit_ingest/
+│   │   └── lambda_function.py   # Ingests Reddit posts + Comprehend
+│   └── reddit_summary/
+│       └── lambda_function.py   # Summarizes daily sentiment counts
 ├── dynamodb/
-│ └── AISentimentReddit (table) # Stores raw sentiment data
+│   └── AISentimentReddit        # DynamoDB table storing raw sentiment data
 ├── api/
-│ └── summary-endpoint # API Gateway for frontend access
-
+│   └── summary-endpoint         # API Gateway for frontend access
+```
 
 ---
 
