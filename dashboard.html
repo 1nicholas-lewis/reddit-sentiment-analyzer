@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reddit Sentiment on AI in the Workplace</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Reset & basic */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fafafa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header, footer { text-align: center; padding: 1rem; }
+    header { background: #4a90e2; color: #fff; }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    /* Chart container */
+    #chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 1.5rem;
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    /* Controls */
+    #controls {
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #357ab7; }
+
+    /* Footer */
+    footer {
+      background: #eee;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; text-align: center;">
+  <h2>Reddit Sentiment on AI in the Workplace</h2>
+  <p style="font-size: 16px; color: #333;">
+    This interactive dashboard analyzes public sentiment around AI in the workplace by scanning recent Reddit posts across multiple subreddits. 
+    Using AWS Comprehend for natural language processing, posts are classified as positive, negative, neutral, or mixed. The chart below updates dynamically with real-time data, offering a quick pulse check on how people feel about AI tools and trends.
+  </p>
+</div>
+
+  <header>
+    <h1>Reddit Sentiment on AI in the Workplace</h1>
+  </header>
+
+  <main>
+    <div id="controls">
+      <button id="refreshBtn">Refresh Data</button>
+    </div>
+    <div id="chart-container">
+      <canvas id="sentimentChart"></canvas>
+    </div>
+    <p id="statusMessage">Loading data…</p>
+  </main>
+
+  <footer id="footer">
+    Last updated: <span id="lastUpdated">—</span>
+  </footer>
+
+  <script>
+    const apiUrl = 'https://gpoidntrk3.execute-api.us-east-1.amazonaws.com'; // ← replace with your API Gateway URL
+
+    let chart;  // will hold Chart.js instance
+
+    // Format UTC timestamp nicely
+    function formatTimestamp(dt) {
+      const options = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'UTC' };
+      return new Intl.DateTimeFormat('en-US', options).format(dt) + ' UTC';
+    }
+
+    async function loadAndRender() {
+      document.getElementById('statusMessage').textContent = 'Loading data…';
+      try {
+        const resp = await fetch(apiUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+        const items = json.Items || [];
+        if (items.length === 0) {
+          document.getElementById('statusMessage').textContent = 'No data available.';
+          if (chart) chart.destroy();
+          return;
+        }
+
+        // Prepare data in order: POSITIVE, NEUTRAL, NEGATIVE, MIXED
+        const sentiments = ['POSITIVE','NEUTRAL','NEGATIVE','MIXED'];
+        const counts = sentiments.map(label => {
+          const entry = items.find(i => i.sentiment === label);
+          return entry ? entry.count : 0;
+        });
+
+        // Update timestamp
+        document.getElementById('lastUpdated').textContent = formatTimestamp(new Date());
+
+        // Clear status
+        document.getElementById('statusMessage').textContent = '';
+
+        // Render or update chart
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+        if (chart) {
+          chart.data.datasets[0].data = counts;
+          chart.update();
+        } else {
+          chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: sentiments,
+              datasets: [{
+                label: 'Number of Posts',
+                data: counts,
+                backgroundColor: ['#4caf50','#9e9e9e','#f44336','#ff9800'],
+                borderColor: ['#388e3c','#616161','#d32f2f','#ef6c00'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              animation: { duration: 800 },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 1 },
+                  title: { display: true, text: 'Post Count' }
+                },
+                x: {
+                  title: { display: true, text: 'Sentiment' }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                title: { display: false },
+                tooltip: { enabled: true }
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        document.getElementById('statusMessage').textContent = 'Error loading data.';
+        if (chart) chart.destroy();
+      }
+    }
+
+    // Wire up refresh button
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      loadAndRender();
+    });
+
+    // Auto-refresh every 5 minutes
+    setInterval(loadAndRender, 5 * 60 * 1000);
+
+    // Initial load
+    loadAndRender();
+  </script>
+</body>
+</html>
+
+
